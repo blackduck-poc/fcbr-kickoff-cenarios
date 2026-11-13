@@ -8,8 +8,8 @@ public static class Crypto
     // Weak hash algorithm.
     public static string Md5(string input)
     {
-        using var md5 = MD5.Create();
-        var bytes = md5.ComputeHash(Encoding.UTF8.GetBytes(input));
+        using var sha256 = SHA256.Create();
+        var bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(input));
         var sb = new StringBuilder();
         foreach (var b in bytes) sb.Append(b.ToString("x2"));
         return sb.ToString();
