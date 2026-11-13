@@ -33,10 +33,8 @@ app.MapGet("/redirect", (string url) => Results.Redirect(url));
 // Insecure deserialization of request body.
 app.MapPost("/orders/import", async (HttpRequest request) =>
 {
-    using var reader = new StreamReader(request.Body);
-    var body = await reader.ReadToEndAsync();
-    var order = Serialization.Deserialize(body);
-    return Results.Ok(order?.ToString());
+    var order = await request.ReadFromJsonAsync<Order>();
+    return order is null ? Results.BadRequest() : Results.Ok(order.ToString());
 });
 
 app.MapGet("/hash", (string value) => Results.Text(Crypto.Md5(value)));
