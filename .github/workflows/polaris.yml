@@ -1,0 +1,74 @@
+name: polaris
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      sast_location:
+        description: 'SAST test location'
+        type: choice
+        options: [ hybrid, local, remote ]
+        default: hybrid
+      project_name:
+        description: 'Polaris project name'
+        default: orders-api-pipeline
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+env:
+  APP_NAME: FCBR-Kickoff-Cenarios
+  PROJECT_NAME: ${{ inputs.project_name || 'orders-api-pipeline' }}
+
+jobs:
+  full-scan:
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - run: dotnet restore src/OrdersApi/OrdersApi.csproj
+      - name: Polaris full scan
+        uses: blackduck-inc/black-duck-security-scan@v2
+        with:
+          polaris_server_url: ${{ secrets.POLARIS_SERVERURL }}
+          polaris_access_token: ${{ secrets.POLARIS_ACCESSTOKEN }}
+          polaris_application_name: ${{ env.APP_NAME }}
+          polaris_project_name: ${{ env.PROJECT_NAME }}
+          polaris_assessment_types: 'SAST,SCA'
+          polaris_test_sast_location: ${{ inputs.sast_location || 'hybrid' }}
+          polaris_fixpr_enabled: true
+          polaris_fixpr_maxCount: 5
+          polaris_fixpr_filter_severities: 'CRITICAL,HIGH'
+          polaris_fixpr_useUpgradeGuidance: 'SHORT_TERM,LONG_TERM'
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          include_diagnostics: true
+
+  pull-request-scan:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - run: dotnet restore src/OrdersApi/OrdersApi.csproj
+      - name: Polaris pull request scan
+        uses: blackduck-inc/black-duck-security-scan@v2
+        with:
+          polaris_server_url: ${{ secrets.POLARIS_SERVERURL }}
+          polaris_access_token: ${{ secrets.POLARIS_ACCESSTOKEN }}
+          polaris_application_name: ${{ env.APP_NAME }}
+          polaris_project_name: ${{ env.PROJECT_NAME }}
+          polaris_assessment_types: 'SAST,SCA'
+          polaris_prComment_enabled: true
+          polaris_prComment_severities: 'CRITICAL,HIGH'
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          include_diagnostics: true
