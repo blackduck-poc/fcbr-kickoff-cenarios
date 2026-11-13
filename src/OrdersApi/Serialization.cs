@@ -7,7 +7,7 @@ public static class Serialization
     // Type name handling enabled for untrusted input.
     private static readonly JsonSerializerSettings Settings = new()
     {
-        TypeNameHandling = TypeNameHandling.All
+        TypeNameHandling = TypeNameHandling.None
     };
 
     public static object? Deserialize(string json) => JsonConvert.DeserializeObject(json, Settings);
