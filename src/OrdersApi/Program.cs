@@ -41,4 +41,6 @@ app.MapPost("/orders/import", async (HttpRequest request) =>
 
 app.MapGet("/hash", (string value) => Results.Text(Crypto.Md5(value)));
 
+app.MapReports();
+
 app.Run();
